@@ -1,49 +1,82 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import { useWalletStore } from '@/stores/wallet';
-import { useContractStore } from '@/stores/contract';
-import { Header } from '@/components/layout/Header';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Building2, 
-  Coins, 
-  TrendingUp, 
-  Users,
+import { useEffect } from "react";
+import { useWalletStore } from "@/stores/wallet";
+import { useContractStore } from "@/stores/contract";
+import { Header } from "@/components/layout/Header";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  BookOpen,
+  Trophy,
+  TrendingUp,
+  User,
   ArrowRight,
   CheckCircle,
-  AlertCircle,
-  Clock
-} from 'lucide-react';
-import { formatTokenAmount, formatCurrency, formatPercentage } from '@/lib/stellar';
-import Link from 'next/link';
+  Clock,
+  GraduationCap,
+} from "lucide-react";
+import Link from "next/link";
 
 export default function Dashboard() {
-  const { isConnected, address, checkConnection } = useWalletStore();
-  const { 
-    assetMetadata, 
-    userBalance, 
-    isWhitelisted, 
-    compliance,
+  const { isConnected, profile, checkConnection } = useWalletStore();
+  const {
+    activities,
+    competencies,
     isLoading,
-    fetchContractData,
-    fetchUserData 
+    fetchActivities,
+    fetchCompetencies,
   } = useContractStore();
 
-  // Check wallet connection and fetch data on mount
+  // Check connection and fetch data on mount
   useEffect(() => {
     checkConnection();
-    fetchContractData();
-  }, [checkConnection, fetchContractData]);
-
-  // Fetch user data when wallet connects
-  useEffect(() => {
-    if (isConnected && address) {
-      fetchUserData(address);
+    if (isConnected && profile?.id) {
+      fetchActivities(profile.id);
+      fetchCompetencies(profile.id);
     }
-  }, [isConnected, address, fetchUserData]);
+  }, [
+    checkConnection,
+    isConnected,
+    profile?.id,
+    fetchActivities,
+    fetchCompetencies,
+  ]);
+
+  const dashboardMetrics = [
+    {
+      title: "Total Activities",
+      value: activities?.length || 0,
+      description: "Recorded professional development activities",
+      icon: BookOpen,
+    },
+    {
+      title: "Competencies",
+      value: competencies?.length || 0,
+      description: "Areas of professional expertise",
+      icon: Trophy,
+    },
+    {
+      title: "Recent Progress",
+      value: "4",
+      description: "Activities in last 30 days",
+      icon: TrendingUp,
+    },
+    {
+      title: "Verification Status",
+      value: activities?.filter((a) => a.status === "verified").length || 0,
+      description: "Verified activities",
+      icon: CheckCircle,
+      status: "success",
+    },
+  ];
 
   if (!isConnected) {
     return (
@@ -53,47 +86,47 @@ export default function Dashboard() {
           <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] space-y-8">
             <div className="text-center space-y-4 max-w-2xl">
               <h1 className="text-4xl font-bold tracking-tight">
-                Real World Asset Investment Platform
+                Professional Development Record Platform
               </h1>
               <p className="text-xl text-muted-foreground">
-                Access tokenized real estate, commodities, and other physical assets 
-                through compliant blockchain technology on Stellar.
+                Track your professional growth, showcase your achievements, and
+                manage your career development journey in one place.
               </p>
             </div>
-            
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-3xl">
               <Card className="text-center">
                 <CardHeader>
-                  <Building2 className="h-12 w-12 mx-auto text-primary" />
-                  <CardTitle className="text-lg">Tokenized Assets</CardTitle>
+                  <BookOpen className="h-12 w-12 mx-auto text-primary" />
+                  <CardTitle className="text-lg">Track Activities</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Invest in premium real estate and other assets through blockchain tokens
+                    Record and monitor your professional development activities
                   </p>
                 </CardContent>
               </Card>
-              
+
               <Card className="text-center">
                 <CardHeader>
-                  <CheckCircle className="h-12 w-12 mx-auto text-green-600" />
-                  <CardTitle className="text-lg">Compliant</CardTitle>
+                  <Trophy className="h-12 w-12 mx-auto text-amber-500" />
+                  <CardTitle className="text-lg">Build Competencies</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    KYC verification and regulatory compliance built into every transaction
+                    Develop and demonstrate your professional competencies
                   </p>
                 </CardContent>
               </Card>
-              
+
               <Card className="text-center">
                 <CardHeader>
-                  <TrendingUp className="h-12 w-12 mx-auto text-blue-600" />
-                  <CardTitle className="text-lg">High Yield</CardTitle>
+                  <GraduationCap className="h-12 w-12 mx-auto text-blue-600" />
+                  <CardTitle className="text-lg">Showcase Growth</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm text-muted-foreground">
-                    Earn passive income through rental yields and asset appreciation
+                    Generate reports and portfolios of your professional journey
                   </p>
                 </CardContent>
               </Card>
@@ -107,214 +140,104 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <main className="container mx-auto px-4 py-8">
-        <div className="space-y-8">
-          {/* Welcome Section */}
-          <div className="space-y-4">
-            <h1 className="text-3xl font-bold">Welcome to RWA Investor</h1>
-            <p className="text-lg text-muted-foreground">
-              Your gateway to tokenized real world assets
-            </p>
-          </div>
-
-          {/* Portfolio Overview Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <Card>
+      <main className="container mx-auto p-4 space-y-6">
+        {/* Metrics Overview */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {dashboardMetrics.map((metric, index) => (
+            <Card key={index}>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Your Holdings</CardTitle>
-                <Building2 className="h-4 w-4 text-muted-foreground" />
+                <CardTitle className="text-sm font-medium">
+                  {metric.title}
+                </CardTitle>
+                <metric.icon className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">
-                  {formatTokenAmount(userBalance)} LAPT
-                </div>
+                <div className="text-2xl font-bold">{metric.value}</div>
                 <p className="text-xs text-muted-foreground">
-                  ≈ {formatCurrency(
-                    (parseFloat(formatTokenAmount(userBalance)) * 1000).toString()
-                  )}
+                  {metric.description}
                 </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Compliance Status</CardTitle>
-                {isWhitelisted ? (
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                ) : (
-                  <AlertCircle className="h-4 w-4 text-yellow-600" />
-                )}
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {isWhitelisted ? 'Verified' : 'Pending'}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {compliance?.kyc_verified ? 'KYC Complete' : 'KYC Required'}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Est. Annual Yield</CardTitle>
-                <TrendingUp className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">8.5%</div>
-                <p className="text-xs text-muted-foreground">
-                  Rental income + appreciation
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Next Distribution</CardTitle>
-                <Clock className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">15 days</div>
-                <p className="text-xs text-muted-foreground">
-                  Monthly rental payment
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Current Asset */}
-          {assetMetadata && (
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle className="text-xl">{assetMetadata.name}</CardTitle>
-                    <CardDescription className="text-base">
-                      {assetMetadata.description}
-                    </CardDescription>
-                  </div>
-                  <Badge variant="secondary" className="text-sm">
-                    {assetMetadata.asset_type.replace('_', ' ').toUpperCase()}
+                {metric.status && (
+                  <Badge
+                    variant={
+                      metric.status === "success" ? "default" : "secondary"
+                    }
+                    className="mt-2"
+                  >
+                    {metric.status === "success" ? "Up to date" : "Pending"}
                   </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Current Valuation</p>
-                    <p className="text-2xl font-bold">
-                      {formatCurrency(formatTokenAmount(assetMetadata.valuation, 7))}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Your Share</p>
-                    <p className="text-2xl font-bold">
-                      {((parseFloat(formatTokenAmount(userBalance)) / 2500) * 100).toFixed(2)}%
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground">Token Symbol</p>
-                    <p className="text-2xl font-bold font-mono">{assetMetadata.symbol}</p>
-                  </div>
-                </div>
-                
-                <div className="flex gap-3">
-                  <Button asChild>
-                    <Link href="/transfer">
-                      Transfer Tokens
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Link>
-                  </Button>
-                  <Button variant="outline" asChild>
-                    <Link href="/marketplace">
-                      View More Assets
-                    </Link>
-                  </Button>
-                </div>
+                )}
               </CardContent>
             </Card>
-          )}
+          ))}
+        </div>
 
-          {/* Quick Actions */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Investment Opportunities</CardTitle>
-                <CardDescription>
-                  Discover new tokenized assets to diversify your portfolio
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
+        {/* Recent Activities and Actions */}
+        <div className="grid gap-4 md:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Recent Activities</CardTitle>
+              <CardDescription>
+                Your latest professional development records
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {activities.slice(0, 3).map((activity, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 rounded-lg border"
+                  >
                     <div>
-                      <p className="font-medium">Downtown Office Building</p>
-                      <p className="text-sm text-muted-foreground">Commercial Real Estate</p>
+                      <p className="font-medium">{activity.title}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {activity.date_completed}
+                      </p>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold">9.2% APY</p>
-                      <Badge variant="outline" className="text-xs">Coming Soon</Badge>
-                    </div>
+                    <Badge>{activity.status}</Badge>
                   </div>
-                  
-                  <div className="flex items-center justify-between p-3 border rounded-lg">
-                    <div>
-                      <p className="font-medium">Gold Storage Facility</p>
-                      <p className="text-sm text-muted-foreground">Commodities</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-bold">6.8% APY</p>
-                      <Badge variant="outline" className="text-xs">Q2 2025</Badge>
-                    </div>
-                  </div>
-                </div>
-                
-                <Button className="w-full" variant="outline" asChild>
-                  <Link href="/marketplace">
-                    View All Opportunities
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
+                ))}
+                <Link href="/activities" className="block">
+                  <Button variant="outline" className="w-full justify-between">
+                    View All Activities
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Activity</CardTitle>
-                <CardDescription>
-                  Your latest transactions and updates
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-3">
-                    <div className="h-2 w-2 bg-green-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Welcome to RWA Investor</p>
-                      <p className="text-xs text-muted-foreground">Account created successfully</p>
+          <Card>
+            <CardHeader>
+              <CardTitle>Competency Progress</CardTitle>
+              <CardDescription>
+                Track your professional competency development
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {competencies.map((competency, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between p-4 rounded-lg border"
+                  >
+                    <div>
+                      <p className="font-medium">{competency.name}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Level: {competency.level}
+                      </p>
                     </div>
-                    <p className="text-xs text-muted-foreground">Just now</p>
+                    <Badge variant="outline">{competency.status}</Badge>
                   </div>
-                  
-                  <div className="flex items-center gap-3">
-                    <div className="h-2 w-2 bg-blue-500 rounded-full"></div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Compliance Verification</p>
-                      <p className="text-xs text-muted-foreground">KYC status updated</p>
-                    </div>
-                    <p className="text-xs text-muted-foreground">2 min ago</p>
-                  </div>
-                </div>
-                
-                <Button className="w-full" variant="outline" asChild>
-                  <Link href="/transfer">
-                    Make Your First Transfer
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Link>
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+                ))}
+                <Link href="/competencies" className="block">
+                  <Button variant="outline" className="w-full justify-between">
+                    View All Competencies
+                    <ArrowRight className="h-4 w-4" />
+                  </Button>
+                </Link>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </main>
     </div>

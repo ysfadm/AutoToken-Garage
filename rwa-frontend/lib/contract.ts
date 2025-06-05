@@ -1,5 +1,9 @@
-import { AssetMetadata, ComplianceData, ContractInfo } from './types';
-import { RWA_CONTRACT_ID, createSorobanServer, parseContractError } from './stellar';
+import { AssetMetadata, ComplianceData, ContractInfo } from "./types";
+import {
+  RWA_CONTRACT_ID,
+  createSorobanServer,
+  parseContractError,
+} from "./stellar";
 
 // Contract method signatures
 export interface ContractMethods {
@@ -16,7 +20,10 @@ export interface ContractMethods {
   transfer: (from: string, to: string, amount: string) => Promise<boolean>;
   mint: (to: string, amount: string) => Promise<boolean>;
   burn: (from: string, amount: string) => Promise<boolean>;
-  addCompliance: (address: string, compliance: ComplianceData) => Promise<boolean>;
+  addCompliance: (
+    address: string,
+    compliance: ComplianceData
+  ) => Promise<boolean>;
   addToWhitelist: (address: string) => Promise<boolean>;
   removeFromWhitelist: (address: string) => Promise<boolean>;
   updateAssetValuation: (newValuation: string) => Promise<boolean>;
@@ -30,34 +37,87 @@ class MockContractClient implements ContractMethods {
   private contractId: string;
   private networkUrl: string;
 
-  constructor(contractId: string = RWA_CONTRACT_ID, network: 'testnet' | 'mainnet' = 'testnet') {
+  constructor(
+    contractId: string = RWA_CONTRACT_ID,
+    network: "testnet" | "mainnet" = "testnet"
+  ) {
     this.contractId = contractId;
     this.networkUrl = createSorobanServer(network);
   }
 
   // Mock asset metadata matching our deployed contract
   private mockAssetMetadata: AssetMetadata = {
-    name: 'Luxury Apartment NYC',
-    symbol: 'LAPT',
-    asset_type: 'real_estate',
-    description: 'Premium Manhattan apartment tokenized for fractional ownership',
-    valuation: '25000000000000', // $2.5M in stroops
+    name: "Luxury Apartment NYC",
+    symbol: "LAPT",
+    asset_type: "real_estate",
+    description:
+      "Premium Manhattan apartment tokenized for fractional ownership",
+    valuation: "25000000000000", // $2.5M in stroops
     last_valuation_date: Math.floor(Date.now() / 1000),
-    legal_doc_hash: 'deed_hash_abc123'
+    legal_doc_hash: "deed_hash_abc123",
   };
+
+  // Mock data for automotive assets
+  private mockVehicleAssets: AssetMetadata[] = [
+    {
+      name: "1967 Ford Mustang GT",
+      symbol: "MUST67",
+      asset_type: "classic_car",
+      description:
+        "Fully restored 1967 Ford Mustang GT with original V8 engine",
+      valuation: "500000",
+      last_valuation_date: Date.now(),
+      legal_doc_hash: "0x...",
+      vehicleDetails: {
+        make: "Ford",
+        model: "Mustang GT",
+        year: 1967,
+        mileage: 76000,
+        engine: "V8",
+        condition: "Excellent",
+        documentationStatus: "Complete",
+      },
+      totalSupply: 1000,
+      tokenPrice: 500,
+      soldPercentage: 65,
+    },
+    {
+      name: "Electric Vehicle Fleet - City Cars",
+      symbol: "EVFLEET",
+      asset_type: "fleet",
+      description: "Urban electric vehicle fleet for ride-sharing",
+      valuation: "2000000",
+      last_valuation_date: Date.now(),
+      legal_doc_hash: "0x...",
+      vehicleDetails: {
+        make: "Multiple",
+        model: "Urban EV Fleet",
+        year: 2025,
+        mileage: 0,
+        engine: "Electric",
+        condition: "Excellent",
+        documentationStatus: "Complete",
+      },
+      totalSupply: 2000,
+      tokenPrice: 1000,
+      soldPercentage: 45,
+    },
+  ];
 
   // View functions
   async balance(address: string): Promise<string> {
     try {
       // Mock implementation - in production, this would call the actual contract
-      console.log(`Querying balance for ${address} on contract ${this.contractId}`);
-      
+      console.log(
+        `Querying balance for ${address} on contract ${this.contractId}`
+      );
+
       // Return a mock balance based on address
-      if (address.includes('admin')) return '1000000000000'; // 100,000 tokens
-      if (address.includes('test')) return '100000000000'; // 10,000 tokens
-      return '10000000000'; // 1,000 tokens default
+      if (address.includes("admin")) return "1000000000000"; // 100,000 tokens
+      if (address.includes("test")) return "100000000000"; // 10,000 tokens
+      return "10000000000"; // 1,000 tokens default
     } catch (error) {
-      console.error('Error querying balance:', error);
+      console.error("Error querying balance:", error);
       throw new Error(parseContractError(error));
     }
   }
@@ -67,7 +127,7 @@ class MockContractClient implements ContractMethods {
       console.log(`Getting asset metadata for contract ${this.contractId}`);
       return this.mockAssetMetadata;
     } catch (error) {
-      console.error('Error getting asset metadata:', error);
+      console.error("Error getting asset metadata:", error);
       throw new Error(parseContractError(error));
     }
   }
@@ -75,9 +135,9 @@ class MockContractClient implements ContractMethods {
   async totalSupply(): Promise<string> {
     try {
       console.log(`Getting total supply for contract ${this.contractId}`);
-      return '25000000000000000'; // 2.5M tokens
+      return "25000000000000000"; // 2.5M tokens
     } catch (error) {
-      console.error('Error getting total supply:', error);
+      console.error("Error getting total supply:", error);
       throw new Error(parseContractError(error));
     }
   }
@@ -86,9 +146,13 @@ class MockContractClient implements ContractMethods {
     try {
       console.log(`Checking whitelist status for ${address}`);
       // Mock: addresses containing 'admin' or 'test' are whitelisted
-      return address.includes('admin') || address.includes('test') || address.includes('G');
+      return (
+        address.includes("admin") ||
+        address.includes("test") ||
+        address.includes("G")
+      );
     } catch (error) {
-      console.error('Error checking whitelist:', error);
+      console.error("Error checking whitelist:", error);
       throw new Error(parseContractError(error));
     }
   }
@@ -98,12 +162,12 @@ class MockContractClient implements ContractMethods {
       console.log(`Getting compliance data for ${address}`);
       return {
         kyc_verified: true,
-        accredited_investor: address.includes('admin'),
-        jurisdiction: 'US',
-        compliance_expiry: Math.floor(Date.now() / 1000) + (365 * 24 * 60 * 60) // 1 year from now
+        accredited_investor: address.includes("admin"),
+        jurisdiction: "US",
+        compliance_expiry: Math.floor(Date.now() / 1000) + 365 * 24 * 60 * 60, // 1 year from now
       };
     } catch (error) {
-      console.error('Error getting compliance:', error);
+      console.error("Error getting compliance:", error);
       throw new Error(parseContractError(error));
     }
   }
@@ -113,7 +177,7 @@ class MockContractClient implements ContractMethods {
       console.log(`Checking if contract ${this.contractId} is paused`);
       return false; // Mock: contract is not paused
     } catch (error) {
-      console.error('Error checking pause status:', error);
+      console.error("Error checking pause status:", error);
       throw new Error(parseContractError(error));
     }
   }
@@ -121,9 +185,9 @@ class MockContractClient implements ContractMethods {
   async getAdmin(): Promise<string> {
     try {
       console.log(`Getting admin address for contract ${this.contractId}`);
-      return 'GADMIN...EXAMPLE'; // Mock admin address
+      return "GADMIN...EXAMPLE"; // Mock admin address
     } catch (error) {
-      console.error('Error getting admin:', error);
+      console.error("Error getting admin:", error);
       throw new Error(parseContractError(error));
     }
   }
@@ -132,22 +196,25 @@ class MockContractClient implements ContractMethods {
   async transfer(from: string, to: string, amount: string): Promise<boolean> {
     try {
       console.log(`Transfer: ${amount} tokens from ${from} to ${to}`);
-      
+
       // Mock validation
-      if (!await this.isWhitelisted(from) || !await this.isWhitelisted(to)) {
-        throw new Error('Both addresses must be whitelisted');
+      if (
+        !(await this.isWhitelisted(from)) ||
+        !(await this.isWhitelisted(to))
+      ) {
+        throw new Error("Both addresses must be whitelisted");
       }
 
       const fromBalance = await this.balance(from);
       if (parseInt(fromBalance) < parseInt(amount)) {
-        throw new Error('Insufficient balance');
+        throw new Error("Insufficient balance");
       }
 
       // Mock successful transfer
-      console.log('Transfer successful');
+      console.log("Transfer successful");
       return true;
     } catch (error) {
-      console.error('Transfer failed:', error);
+      console.error("Transfer failed:", error);
       throw new Error(parseContractError(error));
     }
   }
@@ -155,16 +222,16 @@ class MockContractClient implements ContractMethods {
   async mint(to: string, amount: string): Promise<boolean> {
     try {
       console.log(`Minting ${amount} tokens to ${to}`);
-      
-      if (!await this.isWhitelisted(to)) {
-        throw new Error('Recipient must be whitelisted');
+
+      if (!(await this.isWhitelisted(to))) {
+        throw new Error("Recipient must be whitelisted");
       }
 
       // Mock successful mint
-      console.log('Mint successful');
+      console.log("Mint successful");
       return true;
     } catch (error) {
-      console.error('Mint failed:', error);
+      console.error("Mint failed:", error);
       throw new Error(parseContractError(error));
     }
   }
@@ -172,30 +239,33 @@ class MockContractClient implements ContractMethods {
   async burn(from: string, amount: string): Promise<boolean> {
     try {
       console.log(`Burning ${amount} tokens from ${from}`);
-      
+
       const balance = await this.balance(from);
       if (parseInt(balance) < parseInt(amount)) {
-        throw new Error('Insufficient balance to burn');
+        throw new Error("Insufficient balance to burn");
       }
 
       // Mock successful burn
-      console.log('Burn successful');
+      console.log("Burn successful");
       return true;
     } catch (error) {
-      console.error('Burn failed:', error);
+      console.error("Burn failed:", error);
       throw new Error(parseContractError(error));
     }
   }
 
-  async addCompliance(address: string, compliance: ComplianceData): Promise<boolean> {
+  async addCompliance(
+    address: string,
+    compliance: ComplianceData
+  ): Promise<boolean> {
     try {
       console.log(`Adding compliance for ${address}:`, compliance);
-      
+
       // Mock successful compliance addition
-      console.log('Compliance added successfully');
+      console.log("Compliance added successfully");
       return true;
     } catch (error) {
-      console.error('Add compliance failed:', error);
+      console.error("Add compliance failed:", error);
       throw new Error(parseContractError(error));
     }
   }
@@ -203,12 +273,12 @@ class MockContractClient implements ContractMethods {
   async addToWhitelist(address: string): Promise<boolean> {
     try {
       console.log(`Adding ${address} to whitelist`);
-      
+
       // Mock successful whitelist addition
-      console.log('Address added to whitelist');
+      console.log("Address added to whitelist");
       return true;
     } catch (error) {
-      console.error('Add to whitelist failed:', error);
+      console.error("Add to whitelist failed:", error);
       throw new Error(parseContractError(error));
     }
   }
@@ -216,12 +286,12 @@ class MockContractClient implements ContractMethods {
   async removeFromWhitelist(address: string): Promise<boolean> {
     try {
       console.log(`Removing ${address} from whitelist`);
-      
+
       // Mock successful whitelist removal
-      console.log('Address removed from whitelist');
+      console.log("Address removed from whitelist");
       return true;
     } catch (error) {
-      console.error('Remove from whitelist failed:', error);
+      console.error("Remove from whitelist failed:", error);
       throw new Error(parseContractError(error));
     }
   }
@@ -229,15 +299,17 @@ class MockContractClient implements ContractMethods {
   async updateAssetValuation(newValuation: string): Promise<boolean> {
     try {
       console.log(`Updating asset valuation to ${newValuation}`);
-      
+
       // Update mock metadata
       this.mockAssetMetadata.valuation = newValuation;
-      this.mockAssetMetadata.last_valuation_date = Math.floor(Date.now() / 1000);
-      
-      console.log('Asset valuation updated');
+      this.mockAssetMetadata.last_valuation_date = Math.floor(
+        Date.now() / 1000
+      );
+
+      console.log("Asset valuation updated");
       return true;
     } catch (error) {
-      console.error('Update valuation failed:', error);
+      console.error("Update valuation failed:", error);
       throw new Error(parseContractError(error));
     }
   }
@@ -245,12 +317,12 @@ class MockContractClient implements ContractMethods {
   async pause(): Promise<boolean> {
     try {
       console.log(`Pausing contract ${this.contractId}`);
-      
+
       // Mock successful pause
-      console.log('Contract paused');
+      console.log("Contract paused");
       return true;
     } catch (error) {
-      console.error('Pause failed:', error);
+      console.error("Pause failed:", error);
       throw new Error(parseContractError(error));
     }
   }
@@ -258,12 +330,12 @@ class MockContractClient implements ContractMethods {
   async unpause(): Promise<boolean> {
     try {
       console.log(`Unpausing contract ${this.contractId}`);
-      
+
       // Mock successful unpause
-      console.log('Contract unpaused');
+      console.log("Contract unpaused");
       return true;
     } catch (error) {
-      console.error('Unpause failed:', error);
+      console.error("Unpause failed:", error);
       throw new Error(parseContractError(error));
     }
   }
@@ -272,7 +344,7 @@ class MockContractClient implements ContractMethods {
 // Contract client factory
 export const createContractClient = (
   contractId: string = RWA_CONTRACT_ID,
-  network: 'testnet' | 'mainnet' = 'testnet'
+  network: "testnet" | "mainnet" = "testnet"
 ): ContractMethods => {
   return new MockContractClient(contractId, network);
 };
@@ -280,15 +352,15 @@ export const createContractClient = (
 // Convenience functions for common operations
 export const getContractInfo = async (
   contractId: string = RWA_CONTRACT_ID,
-  network: 'testnet' | 'mainnet' = 'testnet'
+  network: "testnet" | "mainnet" = "testnet"
 ): Promise<ContractInfo> => {
   const client = createContractClient(contractId, network);
-  
+
   const [metadata, totalSupply, isPaused, admin] = await Promise.all([
     client.getAssetMetadata(),
     client.totalSupply(),
     client.isPaused(),
-    client.getAdmin()
+    client.getAdmin(),
   ]);
 
   return {
@@ -296,27 +368,27 @@ export const getContractInfo = async (
     admin,
     totalSupply,
     isPaused,
-    metadata
+    metadata,
   };
 };
 
 export const getUserContractData = async (
   userAddress: string,
   contractId: string = RWA_CONTRACT_ID,
-  network: 'testnet' | 'mainnet' = 'testnet'
+  network: "testnet" | "mainnet" = "testnet"
 ) => {
   const client = createContractClient(contractId, network);
-  
+
   const [balance, isWhitelisted, compliance] = await Promise.all([
     client.balance(userAddress),
     client.isWhitelisted(userAddress),
-    client.getCompliance(userAddress).catch(() => null) // Compliance might not exist
+    client.getCompliance(userAddress).catch(() => null), // Compliance might not exist
   ]);
 
   return {
     balance,
     isWhitelisted,
-    compliance
+    compliance,
   };
 };
 
@@ -324,8 +396,11 @@ export const getUserContractData = async (
 export const batchWhitelistAddresses = async (
   addresses: string[],
   contractId: string = RWA_CONTRACT_ID,
-  network: 'testnet' | 'mainnet' = 'testnet'
-): Promise<{ success: string[]; failed: { address: string; error: string }[] }> => {
+  network: "testnet" | "mainnet" = "testnet"
+): Promise<{
+  success: string[];
+  failed: { address: string; error: string }[];
+}> => {
   const client = createContractClient(contractId, network);
   const success: string[] = [];
   const failed: { address: string; error: string }[] = [];
@@ -337,10 +412,10 @@ export const batchWhitelistAddresses = async (
     } catch (error) {
       failed.push({
         address,
-        error: parseContractError(error)
+        error: parseContractError(error),
       });
     }
   }
 
   return { success, failed };
-}; 
+};

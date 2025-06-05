@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { Toaster } from '@/components/ui/sonner'
+import { Toaster } from "@/components/ui/sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,14 +14,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "RWA Investor - Real World Asset Platform",
-  description: "Access tokenized real estate, commodities, and other physical assets through compliant blockchain technology on Stellar.",
+  title: "PDR Platform - Professional Development Record",
+  description:
+    "Track, manage and certify your professional development journey. A comprehensive platform for professional growth.",
 };
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return (
     <html lang="en">

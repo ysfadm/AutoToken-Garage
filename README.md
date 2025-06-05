@@ -1,8 +1,8 @@
-# 🏢 RWA Investment Platform
+# 🚗 Automotive & Mobility RWA Platform
 
-A professional Real World Asset (RWA) tokenization and investment platform built on the Stellar blockchain. This platform enables investors to discover, invest in, and trade tokenized real world assets including real estate, commodities, and infrastructure projects.
+A specialized Real World Asset (RWA) tokenization and investment platform focused on the automotive and mobility sector, built on the Stellar blockchain. This platform enables investors to discover, invest in, and trade tokenized automotive assets, EV infrastructure, and mobility projects.
 
-![RWA Platform](https://img.shields.io/badge/Platform-RWA_Investment-blue)
+![RWA Platform](https://img.shields.io/badge/Platform-Automotive_RWA-blue)
 ![Blockchain](https://img.shields.io/badge/Blockchain-Stellar-brightgreen)
 ![Framework](https://img.shields.io/badge/Framework-Next.js_15-black)
 ![TypeScript](https://img.shields.io/badge/Language-TypeScript-blue)
@@ -15,6 +15,7 @@ The RWA Investment Platform democratizes access to traditionally illiquid real w
 ### **🌟 Key Features**
 
 #### **For Investors**
+
 - 💼 **Professional Dashboard** - Portfolio overview with real-time asset valuations
 - 🏪 **Asset Marketplace** - Discover and filter tokenized investment opportunities
 - 💸 **Secure Transfers** - Send/receive RWA tokens with compliance validation
@@ -22,12 +23,14 @@ The RWA Investment Platform democratizes access to traditionally illiquid real w
 - 🔐 **Wallet Integration** - Seamless Freighter wallet connectivity
 
 #### **For Asset Owners**
+
 - 🏭 **Tokenization Wizard** - 5-step process to tokenize physical assets
 - 📋 **Compliance Management** - KYC/AML and regulatory compliance tools
 - 📈 **Funding Management** - Set investment goals and track capital raising
 - 🔒 **Legal Framework** - Document verification and legal compliance
 
 #### **Platform Features**
+
 - 🌐 **Multi-Asset Support** - Real estate, commodities, infrastructure
 - ⚡ **Stellar Integration** - Fast, low-cost blockchain transactions
 - 🛡️ **Regulatory Compliance** - Built-in KYC/whitelist validation
@@ -38,6 +41,7 @@ The RWA Investment Platform democratizes access to traditionally illiquid real w
 ## 🚀 **Quick Start**
 
 ### **Prerequisites**
+
 - Node.js 18+ installed
 - [Freighter Wallet](https://freighter.app/) browser extension
 - Access to Stellar Testnet for development
@@ -77,14 +81,14 @@ npm start
 
 ### **Technology Stack**
 
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **Frontend** | Next.js 15 + TypeScript | React-based web application |
-| **Styling** | Tailwind CSS + shadcn/ui | Professional UI components |
-| **State Management** | Zustand | Lightweight state management |
-| **Blockchain** | Stellar SDK | Blockchain integration |
-| **Wallet** | Freighter API | Wallet connectivity |
-| **Icons** | Lucide React | Professional icon system |
+| Component            | Technology               | Purpose                      |
+| -------------------- | ------------------------ | ---------------------------- |
+| **Frontend**         | Next.js 15 + TypeScript  | React-based web application  |
+| **Styling**          | Tailwind CSS + shadcn/ui | Professional UI components   |
+| **State Management** | Zustand                  | Lightweight state management |
+| **Blockchain**       | Stellar SDK              | Blockchain integration       |
+| **Wallet**           | Freighter API            | Wallet connectivity          |
+| **Icons**            | Lucide React             | Professional icon system     |
 
 ### **Directory Structure**
 
@@ -117,6 +121,7 @@ rwa-frontend/
 ## 💼 **Smart Contract Integration**
 
 ### **Contract Details**
+
 - **Contract ID**: `CBQAAC4EHNMMHEI2W3QU6UQ5N4KSVYRLVTB5M2XMARCNS4CNLWMX3VQ6`
 - **Network**: Stellar Testnet
 - **Asset**: Luxury Apartment NYC (LAPT)
@@ -124,27 +129,27 @@ rwa-frontend/
 
 ### **Supported Operations**
 
-| Operation | Description | Status |
-|-----------|-------------|--------|
-| `get_balance` | Query user's token balance | ✅ Implemented |
-| `get_metadata` | Retrieve asset information | ✅ Implemented |
-| `transfer` | Send tokens between addresses | ✅ Implemented |
-| `check_compliance` | Verify KYC/whitelist status | ✅ Implemented |
-| `get_supply` | Get total token supply | ✅ Implemented |
-| `mint` | Create new tokens (admin) | 🔄 Admin only |
-| `pause` | Pause contract operations | 🔄 Admin only |
+| Operation          | Description                   | Status         |
+| ------------------ | ----------------------------- | -------------- |
+| `get_balance`      | Query user's token balance    | ✅ Implemented |
+| `get_metadata`     | Retrieve asset information    | ✅ Implemented |
+| `transfer`         | Send tokens between addresses | ✅ Implemented |
+| `check_compliance` | Verify KYC/whitelist status   | ✅ Implemented |
+| `get_supply`       | Get total token supply        | ✅ Implemented |
+| `mint`             | Create new tokens (admin)     | 🔄 Admin only  |
+| `pause`            | Pause contract operations     | 🔄 Admin only  |
 
 ### **Asset Metadata Structure**
 
 ```typescript
 interface AssetMetadata {
-  name: string;              // "Luxury Apartment NYC"
-  symbol: string;            // "LAPT"  
-  asset_type: string;        // "real_estate"
-  description: string;       // Asset description
-  valuation: string;         // Current USD value
+  name: string; // "Luxury Apartment NYC"
+  symbol: string; // "LAPT"
+  asset_type: string; // "real_estate"
+  description: string; // Asset description
+  valuation: string; // Current USD value
   last_valuation_date: number; // Unix timestamp
-  legal_doc_hash: string;    // Property deed hash
+  legal_doc_hash: string; // Property deed hash
 }
 ```
 
@@ -153,24 +158,28 @@ interface AssetMetadata {
 ## 🎨 **User Interface Guide**
 
 ### **🏠 Dashboard Page (`/`)**
+
 - Portfolio value and performance metrics
 - Compliance status indicators
 - Quick action buttons
 - Investment opportunities overview
 
 ### **🏪 Marketplace Page (`/marketplace`)**
+
 - Asset discovery with search and filtering
 - Investment statistics and analytics
 - Asset cards with key metrics
 - Direct investment flow
 
 ### **🏭 Tokenization Page (`/tokenize`)**
+
 - 5-step asset tokenization wizard
 - Document upload and verification
 - Token economics configuration
 - Compliance settings and deployment
 
 ### **💸 Transfer Page (`/transfer`)**
+
 - Secure token transfer interface
 - Address validation and compliance checking
 - Transaction preview and confirmation
@@ -181,18 +190,21 @@ interface AssetMetadata {
 ## 🔐 **Security & Compliance**
 
 ### **Wallet Security**
+
 - Non-custodial wallet integration
 - Private key remains with user
 - Session management and auto-disconnect
 - Network validation and switching
 
 ### **Transaction Safety**
+
 - Multi-step validation process
 - Compliance verification before transfers
 - Clear transaction previews
 - Comprehensive error handling
 
 ### **Regulatory Compliance**
+
 - KYC verification requirements
 - Jurisdiction-based restrictions
 - Accredited investor validation
@@ -203,6 +215,7 @@ interface AssetMetadata {
 ## 🌟 **Current Features**
 
 ### **✅ Phase 1: Core Investment Platform (Completed)**
+
 - [x] Professional investor dashboard
 - [x] Asset marketplace with filtering
 - [x] Secure token transfer system
@@ -213,6 +226,7 @@ interface AssetMetadata {
 - [x] Compliance tracking
 
 ### **🔄 Phase 2: Enhanced Trading (In Development)**
+
 - [ ] Advanced marketplace features
 - [ ] Investment calculator and ROI projections
 - [ ] Order book and trading interface
@@ -220,6 +234,7 @@ interface AssetMetadata {
 - [ ] Portfolio analytics
 
 ### **📋 Phase 3: Tokenization Engine (Planned)**
+
 - [ ] Complete tokenization wizard
 - [ ] Document verification system
 - [ ] Legal compliance automation
@@ -227,6 +242,7 @@ interface AssetMetadata {
 - [ ] Asset management tools
 
 ### **🔮 Phase 4: Advanced Features (Future)**
+
 - [ ] Admin panel with role-based access
 - [ ] Revenue distribution automation
 - [ ] Advanced analytics and reporting
@@ -266,24 +282,26 @@ NEXT_PUBLIC_CONTRACT_ID=CBQAAC4EHNMMHEI2W3QU6UQ5N4KSVYRLVTB5M2XMARCNS4CNLWMX3VQ6
 
 ### **Configuration Files**
 
-| File | Purpose |
-|------|---------|
-| `next.config.ts` | Next.js configuration |
-| `tailwind.config.ts` | Tailwind CSS settings |
-| `tsconfig.json` | TypeScript configuration |
-| `components.json` | shadcn/ui component config |
+| File                 | Purpose                    |
+| -------------------- | -------------------------- |
+| `next.config.ts`     | Next.js configuration      |
+| `tailwind.config.ts` | Tailwind CSS settings      |
+| `tsconfig.json`      | TypeScript configuration   |
+| `components.json`    | shadcn/ui component config |
 
 ---
 
 ## 🧪 **Testing Strategy**
 
 ### **Current Testing Approach**
+
 - **Mock Contract Client**: Simulates all blockchain interactions
 - **Test Data**: Realistic asset metadata and user balances
 - **Validation Testing**: Address format and compliance checking
 - **Error Simulation**: Network failures and edge cases
 
 ### **Planned Testing Implementation**
+
 - [ ] Unit tests for utilities and components
 - [ ] Integration tests for wallet and contract flows
 - [ ] End-to-end tests for critical user journeys
@@ -295,16 +313,19 @@ NEXT_PUBLIC_CONTRACT_ID=CBQAAC4EHNMMHEI2W3QU6UQ5N4KSVYRLVTB5M2XMARCNS4CNLWMX3VQ6
 ## 📈 **Asset Types Supported**
 
 ### **🏢 Real Estate**
+
 - **Minimum Value**: $100,000
 - **Examples**: Apartment buildings, office complexes, retail spaces
 - **Current**: Luxury Apartment NYC (LAPT) - $2.5M Manhattan property
 
 ### **🏅 Commodities**
+
 - **Minimum Value**: $50,000
 - **Examples**: Gold storage, oil reserves, agricultural products
 - **Planned**: Gold Storage Facility (Delaware) - $3M precious metals facility
 
 ### **⚡ Infrastructure**
+
 - **Minimum Value**: $500,000
 - **Examples**: Solar farms, data centers, transportation hubs
 - **Planned**: Renewable Energy Farm (Texas) - $8M solar project
@@ -314,12 +335,14 @@ NEXT_PUBLIC_CONTRACT_ID=CBQAAC4EHNMMHEI2W3QU6UQ5N4KSVYRLVTB5M2XMARCNS4CNLWMX3VQ6
 ## 🚨 **Known Limitations**
 
 ### **Current Development Constraints**
+
 - **Simulated Compliance**: Recipient validation is mocked for development
 - **Static Asset Data**: Metadata and balances are not live from blockchain
 - **Network Warnings**: Stellar SDK warnings in web environment (expected)
 - **Manual Network Switching**: Users must switch networks in Freighter manually
 
 ### **Production Readiness Checklist**
+
 - [ ] Connect to live smart contracts
 - [ ] Implement real compliance verification
 - [ ] Add comprehensive error handling
@@ -362,6 +385,7 @@ We welcome contributions to the RWA Investment Platform! Here's how to get start
 ## 📚 **Resources**
 
 ### **Documentation**
+
 - [Stellar Documentation](https://developers.stellar.org/)
 - [Freighter Wallet](https://freighter.app/)
 - [Next.js Documentation](https://nextjs.org/docs)
@@ -369,6 +393,7 @@ We welcome contributions to the RWA Investment Platform! Here's how to get start
 - [Tailwind CSS](https://tailwindcss.com/docs)
 
 ### **Community**
+
 - [Stellar Discord](https://discord.gg/stellar)
 - [Next.js Discord](https://discord.gg/nextjs)
 - [GitHub Issues](link-to-issues)
@@ -393,6 +418,7 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 ## 📞 **Support**
 
 ### **Getting Help**
+
 - 📖 **Documentation**: Check this README and inline code comments
 - 🐛 **Issues**: Report bugs via GitHub Issues
 - 💬 **Community**: Join our Discord for discussions
@@ -400,12 +426,12 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ### **Common Issues**
 
-| Issue | Solution |
-|-------|----------|
-| Wallet not connecting | Ensure Freighter extension is installed and enabled |
-| Build warnings | Stellar SDK warnings are expected in web environments |
-| Network switching | Manually switch networks in Freighter extension |
-| Transaction failures | Check address format and compliance status |
+| Issue                 | Solution                                              |
+| --------------------- | ----------------------------------------------------- |
+| Wallet not connecting | Ensure Freighter extension is installed and enabled   |
+| Build warnings        | Stellar SDK warnings are expected in web environments |
+| Network switching     | Manually switch networks in Freighter extension       |
+| Transaction failures  | Check address format and compliance status            |
 
 ---
 
@@ -415,4 +441,4 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 [Website](link) • [Documentation](link) • [Discord](link) • [Twitter](link)
 
-</div> 
+</div>

@@ -1,107 +1,107 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useWalletStore } from '@/stores/wallet';
-import { useContractStore } from '@/stores/contract';
-import { Header } from '@/components/layout/Header';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Send, 
-  CheckCircle, 
-  AlertCircle, 
+import { useState, useEffect } from "react";
+import { Asset } from "@stellar/stellar-sdk";
+import { useWalletStore } from "@/stores/wallet";
+import { useContractStore } from "@/stores/contract";
+import { Header } from "@/components/layout/Header";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Send,
+  CheckCircle,
+  AlertCircle,
   ArrowRight,
   Info,
-  Wallet
-} from 'lucide-react';
-import { formatTokenAmount, isValidStellarAddress, toContractAmount, estimateNetworkFee } from '@/lib/stellar';
-import { toast } from 'sonner';
-import Link from 'next/link';
+  Wallet,
+} from "lucide-react";
+import {
+  formatTokenAmount,
+  isValidStellarAddress,
+  toContractAmount,
+  estimateNetworkFee,
+} from "@/lib/stellar";
+import { toast } from "sonner";
+import Link from "next/link";
+import { transferTokens } from "@/lib/auto-token";
+
+interface TransferForm {
+  destinationAddress: string;
+  assetCode: string;
+  issuer: string;
+  amount: string;
+}
 
 export default function TransferPage() {
   const { isConnected, address, connect } = useWalletStore();
-  const { 
-    userBalance, 
-    isWhitelisted, 
-    compliance,
-    transfer,
-    isLoading,
-    fetchUserData,
-    fetchContractData
-  } = useContractStore();
+  const { userBalance, isWhitelisted, compliance, transfer, assetMetadata } =
+    useContractStore();
 
-  const [recipient, setRecipient] = useState('');
-  const [amount, setAmount] = useState('');
-  const [isValidRecipient, setIsValidRecipient] = useState(false);
-  const [recipientCompliance, setRecipientCompliance] = useState<any>(null);
-  const [showConfirmation, setShowConfirmation] = useState(false);
+  const [recipientAddress, setRecipientAddress] = useState("");
+  const [amount, setAmount] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [formData, setFormData] = useState<TransferForm>({
+    destinationAddress: "",
+    assetCode: "",
+    issuer: "",
+    amount: "",
+  });
 
   // Load data on mount and when wallet connects
   useEffect(() => {
-    fetchContractData();
     if (isConnected && address) {
-      fetchUserData(address);
+      // fetchUserData(address);
     }
-  }, [isConnected, address, fetchContractData, fetchUserData]);
+  }, [isConnected, address]);
 
-  // Validate recipient address
-  useEffect(() => {
-    if (recipient) {
-      const valid = isValidStellarAddress(recipient);
-      setIsValidRecipient(valid);
-      
-      if (valid) {
-        // In a real app, this would check recipient compliance
-        setRecipientCompliance({
-          isWhitelisted: true,
-          kyc_verified: true,
-          jurisdiction: 'US'
-        });
-      } else {
-        setRecipientCompliance(null);
-      }
-    } else {
-      setIsValidRecipient(false);
-      setRecipientCompliance(null);
-    }
-  }, [recipient]);
-
-  const handleMaxAmount = () => {
-    setAmount(formatTokenAmount(userBalance));
-  };
-
-  const canTransfer = () => {
-    if (!isConnected || !address) return false;
-    if (!isWhitelisted) return false;
-    if (!isValidRecipient) return false;
-    if (!amount || parseFloat(amount) <= 0) return false;
-    if (parseFloat(amount) > parseFloat(formatTokenAmount(userBalance))) return false;
-    return true;
-  };
-
-  const handleTransfer = async () => {
-    if (!canTransfer() || !address) return;
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsProcessing(true);
 
     try {
-      const contractAmount = toContractAmount(amount);
-      const success = await transfer(address, recipient, contractAmount);
-      
-      if (success) {
-        toast.success('Transfer completed successfully!');
-        setAmount('');
-        setRecipient('');
-        setShowConfirmation(false);
-      } else {
-        toast.error('Transfer failed. Please try again.');
-      }
+      // Note: In a real app, source keys would come from a connected wallet
+      const asset = new Asset(formData.assetCode, formData.issuer);
+
+      await transferTokens(
+        // This would be the user's keypair from their wallet
+        sourceKeypair,
+        formData.destinationAddress,
+        asset,
+        formData.amount
+      );
+
+      toast.success("Transfer successful!");
+
+      // Reset form
+      setFormData({
+        destinationAddress: "",
+        assetCode: "",
+        issuer: "",
+        amount: "",
+      });
     } catch (error) {
-      console.error('Transfer error:', error);
-      toast.error('Transfer failed. Please check the details and try again.');
+      toast.error("Transfer failed", {
+        description:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      });
+    } finally {
+      setIsProcessing(false);
     }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   if (!isConnected) {
@@ -109,22 +109,18 @@ export default function TransferPage() {
       <div className="min-h-screen bg-background">
         <Header />
         <main className="container mx-auto px-4 py-8">
-          <div className="flex flex-col items-center justify-center min-h-[calc(100vh-120px)] space-y-6">
-            <Card className="w-full max-w-md text-center">
-              <CardHeader>
-                <Wallet className="h-16 w-16 mx-auto text-muted-foreground" />
-                <CardTitle>Connect Your Wallet</CardTitle>
-                <CardDescription>
-                  You need to connect your Freighter wallet to transfer RWA tokens
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Button onClick={connect} className="w-full">
-                  Connect Freighter Wallet
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
+          <Card className="max-w-md mx-auto text-center">
+            <CardContent className="p-8">
+              <Wallet className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
+              <h2 className="text-xl font-semibold mb-2">Connect Wallet</h2>
+              <p className="text-muted-foreground mb-4">
+                Connect your wallet to transfer vehicle tokens
+              </p>
+              <Button onClick={connect} className="w-full">
+                Connect Wallet
+              </Button>
+            </CardContent>
+          </Card>
         </main>
       </div>
     );
@@ -134,212 +130,123 @@ export default function TransferPage() {
     <div className="min-h-screen bg-background">
       <Header />
       <main className="container mx-auto px-4 py-8">
-        <div className="max-w-2xl mx-auto space-y-6">
-          {/* Page Header */}
-          <div className="space-y-2">
-            <h1 className="text-3xl font-bold">Transfer RWA Tokens</h1>
+        <div className="max-w-xl mx-auto space-y-8">
+          <div className="text-center">
+            <h1 className="text-3xl font-bold mb-2">Transfer Vehicle Tokens</h1>
             <p className="text-muted-foreground">
-              Send your tokenized real world asset shares to other verified investors
+              Transfer ownership tokens for your vehicle investments
             </p>
           </div>
 
-          {/* Compliance Status */}
-          <Alert>
-            <Info className="h-4 w-4" />
-            <AlertDescription>
-              <div className="flex items-center justify-between">
-                <span>
-                  Your compliance status: {' '}
-                  <Badge variant={isWhitelisted ? 'default' : 'destructive'}>
-                    {isWhitelisted ? 'Verified' : 'Not Verified'}
-                  </Badge>
-                </span>
-                {compliance?.kyc_verified && (
-                  <Badge variant="outline" className="text-xs">
-                    KYC Complete
-                  </Badge>
-                )}
-              </div>
-            </AlertDescription>
-          </Alert>
-
-          {/* Current Holdings */}
           <Card>
             <CardHeader>
               <CardTitle>Your Holdings</CardTitle>
-              <CardDescription>Available RWA tokens for transfer</CardDescription>
+              <CardDescription>
+                Current token balance and vehicle information
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-2xl font-bold">{formatTokenAmount(userBalance)} LAPT</p>
-                  <p className="text-sm text-muted-foreground">Luxury Apartment NYC tokens</p>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center p-4 bg-muted/50 rounded-lg">
+                  <div>
+                    <p className="text-sm text-muted-foreground">
+                      Available Balance
+                    </p>
+                    <p className="text-2xl font-bold">
+                      {formatTokenAmount(userBalance || "0")}
+                    </p>
+                  </div>
+                  <Badge variant={isWhitelisted ? "default" : "secondary"}>
+                    {isWhitelisted ? "Verified" : "Unverified"}
+                  </Badge>
                 </div>
-                <Badge variant="secondary">Real Estate</Badge>
+
+                {assetMetadata && (
+                  <div className="text-sm">
+                    <p className="text-muted-foreground">Token Details:</p>
+                    <p>
+                      {assetMetadata.name} ({assetMetadata.symbol})
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Transfer Form */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Send className="h-5 w-5" />
-                Transfer Tokens
-              </CardTitle>
+              <CardTitle>Transfer Details</CardTitle>
               <CardDescription>
-                Enter the recipient address and amount to transfer
+                Enter recipient and amount to transfer
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Recipient Address */}
-              <div className="space-y-2">
+            <CardContent className="space-y-4">
+              <div>
                 <Label htmlFor="recipient">Recipient Address</Label>
                 <Input
                   id="recipient"
-                  placeholder="G... (Stellar address)"
-                  value={recipient}
-                  onChange={(e) => setRecipient(e.target.value)}
-                  className={`font-mono ${
-                    recipient && !isValidRecipient ? 'border-red-500' : ''
-                  }`}
+                  name="destinationAddress"
+                  placeholder="Enter Stellar address"
+                  value={formData.destinationAddress}
+                  onChange={handleChange}
+                  required
                 />
-                {recipient && !isValidRecipient && (
-                  <p className="text-sm text-red-600">Invalid Stellar address format</p>
-                )}
-                {isValidRecipient && recipientCompliance && (
-                  <div className="flex items-center gap-2 text-sm text-green-600">
-                    <CheckCircle className="h-4 w-4" />
-                    Recipient is verified and whitelisted
-                  </div>
-                )}
               </div>
 
-              {/* Amount */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="amount">Amount (LAPT)</Label>
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    onClick={handleMaxAmount}
-                    className="text-xs"
-                  >
-                    Max: {formatTokenAmount(userBalance)}
-                  </Button>
-                </div>
+              <div>
+                <Label htmlFor="amount">Amount to Transfer</Label>
                 <Input
                   id="amount"
-                  type="number"
-                  placeholder="0.00"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  min="0"
-                  step="0.01"
+                  name="amount"
+                  type="text"
+                  pattern="[0-9]*\.?[0-9]+"
+                  placeholder="0.0"
+                  value={formData.amount}
+                  onChange={handleChange}
+                  required
                 />
-                {amount && parseFloat(amount) > parseFloat(formatTokenAmount(userBalance)) && (
-                  <p className="text-sm text-red-600">Insufficient balance</p>
-                )}
+                <p className="text-sm text-muted-foreground mt-1">
+                  Available: {formatTokenAmount(userBalance || "0")} tokens
+                </p>
               </div>
 
-              {/* Transaction Details */}
-              {amount && isValidRecipient && (
-                <div className="space-y-3 p-4 bg-muted rounded-lg">
-                  <h4 className="font-medium">Transaction Summary</h4>
-                  <div className="space-y-2 text-sm">
-                    <div className="flex justify-between">
-                      <span>Amount:</span>
-                      <span className="font-mono">{amount} LAPT</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>Estimated Network Fee:</span>
-                      <span className="font-mono">{estimateNetworkFee('transfer')} XLM</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span>To:</span>
-                      <span className="font-mono text-xs">
-                        {recipient.slice(0, 8)}...{recipient.slice(-8)}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Transfer Button */}
-              <Button 
-                onClick={handleTransfer}
-                disabled={!canTransfer() || isLoading}
-                className="w-full"
-                size="lg"
-              >
-                {isLoading ? (
-                  'Processing Transfer...'
-                ) : (
-                  <>
-                    Transfer Tokens
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </>
-                )}
-              </Button>
-
-              {/* Warnings */}
               {!isWhitelisted && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
                   <AlertDescription>
-                    Your address is not whitelisted. You cannot transfer tokens until compliance verification is complete.
+                    You must complete verification before transferring tokens
                   </AlertDescription>
                 </Alert>
               )}
+
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={
+                  !isWhitelisted || !amount || !recipientAddress || isProcessing
+                }
+                onClick={handleSubmit}
+              >
+                {isProcessing ? (
+                  "Processing..."
+                ) : (
+                  <>
+                    Transfer Tokens
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </>
+                )}
+              </Button>
             </CardContent>
           </Card>
 
-          {/* Help Section */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Transfer Requirements</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-                <div>
-                  <p className="font-medium">KYC Verification</p>
-                  <p className="text-sm text-muted-foreground">
-                    Both sender and recipient must have completed KYC verification
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-                <div>
-                  <p className="font-medium">Whitelist Status</p>
-                  <p className="text-sm text-muted-foreground">
-                    Addresses must be on the approved whitelist for this asset
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <CheckCircle className="h-5 w-5 text-green-600 mt-0.5" />
-                <div>
-                  <p className="font-medium">Jurisdiction Compliance</p>
-                  <p className="text-sm text-muted-foreground">
-                    Transfers must comply with local regulations and asset restrictions
-                  </p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Back to Dashboard */}
-          <div className="text-center">
-            <Button variant="outline" asChild>
-              <Link href="/">
-                ← Back to Dashboard
-              </Link>
-            </Button>
+          <div className="mt-8 max-w-xl mx-auto">
+            <h2 className="text-xl font-semibold mb-4">Recent Transfers</h2>
+            <Card className="p-4">
+              <p className="text-gray-500 text-center">No recent transfers</p>
+            </Card>
           </div>
         </div>
       </main>
     </div>
   );
-} 
+}

@@ -1,12 +1,26 @@
 // Core Smart Contract Types (matching the deployed contract)
+export interface VehicleDetails {
+  make: string;
+  model: string;
+  year: number;
+  mileage: number;
+  engine: string;
+  condition: "Excellent" | "Good" | "Fair" | "Needs Work";
+  documentationStatus: "Complete" | "Pending" | "Incomplete";
+}
+
 export interface AssetMetadata {
   name: string;
   symbol: string;
-  asset_type: string;
+  asset_type: "classic_car" | "ev_project" | "fleet";
   description: string;
-  valuation: string; // i128 as string to handle large numbers
-  last_valuation_date: number; // u64 timestamp
+  valuation: string;
+  last_valuation_date: number;
   legal_doc_hash: string;
+  vehicleDetails: VehicleDetails;
+  totalSupply: number;
+  tokenPrice: number;
+  soldPercentage: number;
 }
 
 export interface ComplianceData {
@@ -18,12 +32,12 @@ export interface ComplianceData {
 
 export interface Transaction {
   id: string;
-  type: 'transfer' | 'mint' | 'burn';
+  type: "transfer" | "mint" | "burn";
   from: string;
   to: string;
   amount: string;
   timestamp: number;
-  status: 'pending' | 'success' | 'failed';
+  status: "pending" | "success" | "failed";
   txHash?: string;
   blockNumber?: number;
 }
@@ -42,17 +56,17 @@ export interface WalletState {
   address: string | null;
   publicKey: string | null;
   balance: string;
-  network: 'testnet' | 'mainnet';
+  network: "testnet" | "mainnet";
 }
 
 // Tokenization System Types
 export interface TokenizationProject {
   id: string;
-  status: 'draft' | 'review' | 'approved' | 'deployed' | 'live';
+  status: "draft" | "review" | "approved" | "deployed" | "live";
   creatorAddress: string;
   assetDetails: {
     name: string;
-    type: 'real_estate' | 'commodities' | 'art' | 'infrastructure';
+    type: "real_estate" | "commodities" | "art" | "infrastructure";
     location: string;
     description: string;
     totalValue: string;
@@ -76,7 +90,7 @@ export interface TokenizationProject {
   financials: {
     projectedYield: string; // percentage as string
     managementFee: string; // percentage as string
-    distributionFrequency: 'monthly' | 'quarterly' | 'annually';
+    distributionFrequency: "monthly" | "quarterly" | "annually";
     estimatedAppreciation: string; // percentage as string
   };
   contractId?: string;
@@ -86,7 +100,13 @@ export interface TokenizationProject {
 
 export interface LegalDocument {
   id: string;
-  type: 'deed' | 'appraisal' | 'legal_opinion' | 'insurance' | 'financial_statement' | 'environmental_report';
+  type:
+    | "deed"
+    | "appraisal"
+    | "legal_opinion"
+    | "insurance"
+    | "financial_statement"
+    | "environmental_report";
   name: string;
   hash: string;
   ipfsHash?: string;
@@ -107,8 +127,8 @@ export interface InvestmentOpportunity {
   pricePerToken: string;
   projectedYield: string;
   minimumInvestment: string;
-  riskLevel: 'low' | 'medium' | 'high';
-  status: 'upcoming' | 'live' | 'sold_out';
+  riskLevel: "low" | "medium" | "high";
+  status: "upcoming" | "live" | "sold_out";
   launchDate: number;
   images: string[];
   contractId?: string;
@@ -120,7 +140,7 @@ export interface InvestmentCalculation {
   projectedAnnualReturn: string;
   projectedMonthlyIncome: string;
   breakEvenPeriod: string;
-  riskAssessment: 'low' | 'medium' | 'high';
+  riskAssessment: "low" | "medium" | "high";
   fees: {
     networkFee: string;
     managementFee: string;
@@ -151,12 +171,19 @@ export interface PortfolioAsset {
 // Admin & Management Types
 export interface AdminAction {
   id: string;
-  type: 'mint' | 'whitelist_add' | 'whitelist_remove' | 'compliance_update' | 'pause' | 'unpause' | 'valuation_update';
+  type:
+    | "mint"
+    | "whitelist_add"
+    | "whitelist_remove"
+    | "compliance_update"
+    | "pause"
+    | "unpause"
+    | "valuation_update";
   targetAddress?: string;
   amount?: string;
   timestamp: number;
   executedBy: string;
-  status: 'pending' | 'executed' | 'failed';
+  status: "pending" | "executed" | "failed";
   txHash?: string;
 }
 
@@ -164,7 +191,7 @@ export interface WhitelistEntry {
   address: string;
   addedDate: number;
   addedBy: string;
-  status: 'active' | 'removed';
+  status: "active" | "removed";
   compliance?: ComplianceData;
 }
 
@@ -198,7 +225,7 @@ export interface ErrorState {
 
 export interface NotificationData {
   id: string;
-  type: 'success' | 'error' | 'warning' | 'info';
+  type: "success" | "error" | "warning" | "info";
   title: string;
   message: string;
   timestamp: number;
@@ -217,7 +244,7 @@ export interface NetworkConfig {
 
 export interface ContractConfig {
   contractId: string;
-  network: 'testnet' | 'mainnet';
+  network: "testnet" | "mainnet";
   adminAddress: string;
 }
 
@@ -229,14 +256,54 @@ export interface MarketplaceFilters {
   yieldRange: [number, number];
   riskLevel: string[];
   status: string[];
-  sortBy: 'price' | 'yield' | 'launch_date' | 'total_value';
-  sortOrder: 'asc' | 'desc';
+  sortBy: "price" | "yield" | "launch_date" | "total_value";
+  sortOrder: "asc" | "desc";
+}
+
+// PDR Types
+export interface PDRRecord {
+  id: string;
+  activity_type:
+    | "training"
+    | "certification"
+    | "project"
+    | "education"
+    | "other";
+  title: string;
+  description: string;
+  date_completed: string;
+  provider: string;
+  documentation: string[];
+  status: "pending" | "verified" | "rejected";
+  competencies: string[];
+  reflection?: string;
+}
+
+export interface CompetencyArea {
+  id: string;
+  name: string;
+  description: string;
+  level: "beginner" | "intermediate" | "advanced" | "expert";
+  status: "in_progress" | "achieved" | "verified";
+  evidence: PDRRecord[];
+}
+
+export interface UserProfile {
+  id: string;
+  name: string;
+  role: string;
+  department: string;
+  joined_date: string;
+  supervisor: string;
+  current_goals: string[];
+  competencies: CompetencyArea[];
+  certifications: PDRRecord[];
 }
 
 // Form Types for Multi-step Wizard
 export interface AssetDetailsFormData {
   name: string;
-  type: 'real_estate' | 'commodities' | 'art' | 'infrastructure';
+  type: "real_estate" | "commodities" | "art" | "infrastructure";
   location: string;
   address: string;
   description: string;
@@ -263,6 +330,27 @@ export interface LegalFormData {
 export interface FinancialsFormData {
   projectedYield: string;
   managementFee: string;
-  distributionFrequency: 'monthly' | 'quarterly' | 'annually';
+  distributionFrequency: "monthly" | "quarterly" | "annually";
   estimatedAppreciation: string;
-} 
+}
+
+export interface ActivityFormData {
+  title: string;
+  type: "training" | "certification" | "project" | "education" | "other";
+  provider: string;
+  description: string;
+  date_completed: string;
+  files: File[];
+  reflection: string;
+  competencies: string[];
+}
+
+// Dashboard Filter Types
+export interface DashboardFilters {
+  activityType: string[];
+  dateRange: [Date, Date];
+  status: string[];
+  competencyArea: string[];
+  sortBy: "date" | "type" | "status";
+  sortOrder: "asc" | "desc";
+}

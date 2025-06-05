@@ -1,18 +1,33 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useWalletStore } from '@/stores/wallet';
-import { Header } from '@/components/layout/Header';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { 
-  Building2, 
-  FileText, 
-  Shield, 
+import { useState } from "react";
+import { Keypair } from "@stellar/stellar-sdk";
+import { useWalletStore } from "@/stores/wallet";
+import { Header } from "@/components/layout/Header";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectTrigger,
+  SelectValue,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+} from "@/components/ui/select";
+import {
+  Car,
+  FileText,
+  Shield,
   Clock,
   Check,
   ArrowRight,
@@ -24,102 +39,136 @@ import {
   Briefcase,
   Coins,
   Calculator,
-  Info
-} from 'lucide-react';
-import { formatCurrency } from '@/lib/stellar';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Progress } from '@/components/ui/progress';
+  Info,
+  Gauge,
+} from "lucide-react";
+import { formatCurrency } from "@/lib/stellar";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import { toast } from "sonner";
+import { tokenizeVehicle, VehicleMetadata } from "@/lib/auto-token";
 
 const ASSET_TYPES = [
   {
-    id: 'real_estate',
-    name: 'Real Estate',
-    description: 'Residential, commercial, or industrial properties',
-    icon: Building2,
-    minValue: 100000,
-    examples: ['Apartment buildings', 'Office complexes', 'Warehouses', 'Retail spaces']
-  },
-  {
-    id: 'commodities',
-    name: 'Commodities',
-    description: 'Physical goods and precious metals',
-    icon: Coins,
+    id: "classic_car",
+    name: "Classic Cars",
+    description: "Vintage and collectible automobiles",
+    icon: Car,
     minValue: 50000,
-    examples: ['Gold storage', 'Oil reserves', 'Agricultural products', 'Rare metals']
+    examples: [
+      "Classic American Cars",
+      "European Vintage Cars",
+      "Rare Limited Editions",
+      "Restored Classics",
+    ],
   },
   {
-    id: 'infrastructure',
-    name: 'Infrastructure',
-    description: 'Energy, transportation, and utility projects',
-    icon: Briefcase,
-    minValue: 500000,
-    examples: ['Solar farms', 'Wind turbines', 'Data centers', 'Transportation hubs']
-  }
+    id: "ev_project",
+    name: "EV Projects",
+    description: "Electric vehicle and mobility innovations",
+    icon: Gauge,
+    minValue: 100000,
+    examples: [
+      "Electric Vehicle Fleets",
+      "Charging Networks",
+      "EV Startups",
+      "Green Mobility Solutions",
+    ],
+  },
+  {
+    id: "fleet",
+    name: "Fleet Investments",
+    description: "Commercial and rental vehicle fleets",
+    icon: Car,
+    minValue: 250000,
+    examples: [
+      "Taxi Fleets",
+      "Rental Car Services",
+      "Delivery Vehicle Fleets",
+      "Corporate Fleets",
+    ],
+  },
 ];
 
 const TOKENIZATION_STEPS = [
   {
     id: 1,
-    title: 'Asset Details',
-    description: 'Provide basic information about your asset'
+    title: "Asset Details",
+    description: "Provide basic information about your asset",
   },
   {
     id: 2,
-    title: 'Legal Documentation',
-    description: 'Upload required legal and ownership documents'
+    title: "Legal Documentation",
+    description: "Upload required legal and ownership documents",
   },
   {
     id: 3,
-    title: 'Tokenization Structure',
-    description: 'Define token economics and distribution'
+    title: "Tokenization Structure",
+    description: "Define token economics and distribution",
   },
   {
     id: 4,
-    title: 'Compliance Setup',
-    description: 'Configure investor requirements and restrictions'
+    title: "Compliance Setup",
+    description: "Configure investor requirements and restrictions",
   },
   {
     id: 5,
-    title: 'Review & Deploy',
-    description: 'Review all details and deploy your token'
-  }
+    title: "Review & Deploy",
+    description: "Review all details and deploy your token",
+  },
 ];
 
-export default function TokenizePage() {
+export default function Tokenize() {
   const { isConnected, address } = useWalletStore();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState({
     // Step 1: Asset Details
-    assetType: '',
-    assetName: '',
-    location: '',
-    description: '',
-    totalValue: '',
-    
+    assetType: "",
+    assetName: "",
+    location: "",
+    description: "",
+    totalValue: "",
+
     // Step 2: Legal Documentation
     ownershipProof: null as File | null,
     valuation: null as File | null,
     insurance: null as File | null,
-    
+
     // Step 3: Tokenization Structure
-    tokenSymbol: '',
-    totalSupply: '',
-    pricePerToken: '',
-    minInvestment: '',
-    
+    tokenSymbol: "",
+    totalSupply: "",
+    pricePerToken: "",
+    minInvestment: "",
+
     // Step 4: Compliance
     kycRequired: true,
     accreditedOnly: false,
-    jurisdictionRestrictions: '',
-    
+    jurisdictionRestrictions: "",
+
     // Step 5: Launch settings
-    launchDate: '',
-    fundingGoal: '',
-    fundingDeadline: ''
+    launchDate: "",
+    fundingGoal: "",
+    fundingDeadline: "",
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+  const [vehicleData, setVehicleData] = useState<
+    VehicleMetadata & {
+      totalSupply: string;
+    }
+  >({
+    make: "",
+    model: "",
+    year: new Date().getFullYear(),
+    vin: "",
+    condition: "",
+    mileage: 0,
+    images: [],
+    totalSupply: "1000000",
   });
 
   const updateFormData = (field: string, value: any) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
   const nextStep = () => {
@@ -136,16 +185,67 @@ export default function TokenizePage() {
 
   const calculateTokenomics = () => {
     if (!formData.totalValue || !formData.totalSupply) return null;
-    
+
     const totalVal = parseFloat(formData.totalValue);
     const supply = parseFloat(formData.totalSupply);
     const pricePerToken = totalVal / supply;
-    
+
     return {
       pricePerToken: pricePerToken.toFixed(2),
       marketCap: totalVal,
-      minInvestmentTokens: formData.minInvestment ? Math.ceil(parseFloat(formData.minInvestment) / pricePerToken) : 0
+      minInvestmentTokens: formData.minInvestment
+        ? Math.ceil(parseFloat(formData.minInvestment) / pricePerToken)
+        : 0,
     };
+  };
+
+  const handleVehicleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    try {
+      // In a real app, these would be managed by a proper wallet
+      const issuerKeypair = Keypair.random();
+      const distributorKeypair = Keypair.random();
+
+      const result = await tokenizeVehicle({
+        issuerKeypair,
+        distributorKeypair,
+        vehicleMetadata: {
+          make: vehicleData.make,
+          model: vehicleData.model,
+          year: vehicleData.year,
+          vin: vehicleData.vin,
+          condition: vehicleData.condition,
+          mileage: vehicleData.mileage,
+          images: vehicleData.images,
+        },
+        totalSupply: vehicleData.totalSupply,
+      });
+
+      toast.success("Vehicle successfully tokenized!", {
+        description: `Asset: ${result.asset.code}`,
+      });
+    } catch (error) {
+      toast.error("Failed to tokenize vehicle", {
+        description:
+          error instanceof Error ? error.message : "Unknown error occurred",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleChange = (
+    e: React.ChangeEvent<
+      HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement
+    >
+  ) => {
+    const { name, value } = e.target;
+    setVehicleData((prev) => ({
+      ...prev,
+      [name]: name === "year" || name === "mileage" ? Number(value) : value,
+    }));
   };
 
   const renderStepContent = () => {
@@ -154,25 +254,31 @@ export default function TokenizePage() {
         return (
           <div className="space-y-6">
             <div>
-              <Label className="text-base font-semibold mb-4 block">Asset Type</Label>
+              <Label className="text-base font-semibold mb-4 block">
+                Asset Type
+              </Label>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {ASSET_TYPES.map((type) => {
                   const Icon = type.icon;
                   return (
-                    <Card 
+                    <Card
                       key={type.id}
                       className={`cursor-pointer transition-all ${
-                        formData.assetType === type.id 
-                          ? 'ring-2 ring-primary bg-primary/5' 
-                          : 'hover:shadow-md'
+                        formData.assetType === type.id
+                          ? "ring-2 ring-primary bg-primary/5"
+                          : "hover:shadow-md"
                       }`}
-                      onClick={() => updateFormData('assetType', type.id)}
+                      onClick={() => updateFormData("assetType", type.id)}
                     >
                       <CardContent className="p-6 text-center">
                         <Icon className="h-8 w-8 mx-auto mb-3 text-primary" />
                         <h3 className="font-semibold mb-2">{type.name}</h3>
-                        <p className="text-sm text-muted-foreground mb-3">{type.description}</p>
-                        <Badge variant="outline">Min: {formatCurrency(type.minValue.toString())}</Badge>
+                        <p className="text-sm text-muted-foreground mb-3">
+                          {type.description}
+                        </p>
+                        <Badge variant="outline">
+                          Min: {formatCurrency(type.minValue.toString())}
+                        </Badge>
                       </CardContent>
                     </Card>
                   );
@@ -187,7 +293,7 @@ export default function TokenizePage() {
                   id="assetName"
                   placeholder="e.g., Luxury Apartment NYC"
                   value={formData.assetName}
-                  onChange={(e) => updateFormData('assetName', e.target.value)}
+                  onChange={(e) => updateFormData("assetName", e.target.value)}
                 />
               </div>
               <div>
@@ -196,7 +302,7 @@ export default function TokenizePage() {
                   id="location"
                   placeholder="e.g., Manhattan, New York"
                   value={formData.location}
-                  onChange={(e) => updateFormData('location', e.target.value)}
+                  onChange={(e) => updateFormData("location", e.target.value)}
                 />
               </div>
             </div>
@@ -207,7 +313,7 @@ export default function TokenizePage() {
                 id="description"
                 placeholder="Detailed description of your asset, its features, and investment potential..."
                 value={formData.description}
-                onChange={(e) => updateFormData('description', e.target.value)}
+                onChange={(e) => updateFormData("description", e.target.value)}
                 className="min-h-24"
               />
             </div>
@@ -219,7 +325,7 @@ export default function TokenizePage() {
                 type="number"
                 placeholder="2500000"
                 value={formData.totalValue}
-                onChange={(e) => updateFormData('totalValue', e.target.value)}
+                onChange={(e) => updateFormData("totalValue", e.target.value)}
               />
               <p className="text-sm text-muted-foreground mt-1">
                 Based on professional appraisal or market valuation
@@ -234,7 +340,8 @@ export default function TokenizePage() {
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                All documents must be notarized and verified by our legal team before tokenization approval.
+                All documents must be notarized and verified by our legal team
+                before tokenization approval.
               </AlertDescription>
             </Alert>
 
@@ -252,7 +359,9 @@ export default function TokenizePage() {
                 <CardContent>
                   <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
                     <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground mb-2">Upload PDF or image</p>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Upload PDF or image
+                    </p>
                     <Button variant="outline" size="sm">
                       Choose File
                     </Button>
@@ -273,7 +382,9 @@ export default function TokenizePage() {
                 <CardContent>
                   <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
                     <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground mb-2">Upload appraisal report</p>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Upload appraisal report
+                    </p>
                     <Button variant="outline" size="sm">
                       Choose File
                     </Button>
@@ -294,7 +405,9 @@ export default function TokenizePage() {
                 <CardContent>
                   <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
                     <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground mb-2">Upload insurance policy</p>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Upload insurance policy
+                    </p>
                     <Button variant="outline" size="sm">
                       Choose File
                     </Button>
@@ -315,7 +428,9 @@ export default function TokenizePage() {
                 <CardContent>
                   <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center">
                     <Upload className="h-8 w-8 mx-auto mb-2 text-muted-foreground" />
-                    <p className="text-sm text-muted-foreground mb-2">Optional documents</p>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Optional documents
+                    </p>
                     <Button variant="outline" size="sm">
                       Choose Files
                     </Button>
@@ -337,7 +452,9 @@ export default function TokenizePage() {
                   id="tokenSymbol"
                   placeholder="e.g., LAPT"
                   value={formData.tokenSymbol}
-                  onChange={(e) => updateFormData('tokenSymbol', e.target.value.toUpperCase())}
+                  onChange={(e) =>
+                    updateFormData("tokenSymbol", e.target.value.toUpperCase())
+                  }
                   maxLength={5}
                 />
                 <p className="text-sm text-muted-foreground mt-1">
@@ -351,7 +468,9 @@ export default function TokenizePage() {
                   type="number"
                   placeholder="1000000"
                   value={formData.totalSupply}
-                  onChange={(e) => updateFormData('totalSupply', e.target.value)}
+                  onChange={(e) =>
+                    updateFormData("totalSupply", e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -363,7 +482,9 @@ export default function TokenizePage() {
                 type="number"
                 placeholder="250"
                 value={formData.minInvestment}
-                onChange={(e) => updateFormData('minInvestment', e.target.value)}
+                onChange={(e) =>
+                  updateFormData("minInvestment", e.target.value)
+                }
               />
             </div>
 
@@ -375,16 +496,28 @@ export default function TokenizePage() {
                 <CardContent>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
-                      <p className="text-sm text-muted-foreground">Price Per Token</p>
-                      <p className="text-2xl font-bold">${tokenomics.pricePerToken}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Price Per Token
+                      </p>
+                      <p className="text-2xl font-bold">
+                        ${tokenomics.pricePerToken}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Market Cap</p>
-                      <p className="text-2xl font-bold">{formatCurrency(tokenomics.marketCap.toString())}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Market Cap
+                      </p>
+                      <p className="text-2xl font-bold">
+                        {formatCurrency(tokenomics.marketCap.toString())}
+                      </p>
                     </div>
                     <div>
-                      <p className="text-sm text-muted-foreground">Min Investment Tokens</p>
-                      <p className="text-2xl font-bold">{tokenomics.minInvestmentTokens.toLocaleString()}</p>
+                      <p className="text-sm text-muted-foreground">
+                        Min Investment Tokens
+                      </p>
+                      <p className="text-2xl font-bold">
+                        {tokenomics.minInvestmentTokens.toLocaleString()}
+                      </p>
                     </div>
                   </div>
                 </CardContent>
@@ -399,7 +532,9 @@ export default function TokenizePage() {
                   type="number"
                   placeholder="1000000"
                   value={formData.fundingGoal}
-                  onChange={(e) => updateFormData('fundingGoal', e.target.value)}
+                  onChange={(e) =>
+                    updateFormData("fundingGoal", e.target.value)
+                  }
                 />
                 <p className="text-sm text-muted-foreground mt-1">
                   Target amount to raise from investors
@@ -411,7 +546,9 @@ export default function TokenizePage() {
                   id="fundingDeadline"
                   type="date"
                   value={formData.fundingDeadline}
-                  onChange={(e) => updateFormData('fundingDeadline', e.target.value)}
+                  onChange={(e) =>
+                    updateFormData("fundingDeadline", e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -432,38 +569,50 @@ export default function TokenizePage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>KYC Verification Required</Label>
-                    <p className="text-sm text-muted-foreground">All investors must complete identity verification</p>
+                    <p className="text-sm text-muted-foreground">
+                      All investors must complete identity verification
+                    </p>
                   </div>
                   <Button
                     variant={formData.kycRequired ? "default" : "outline"}
-                    onClick={() => updateFormData('kycRequired', !formData.kycRequired)}
+                    onClick={() =>
+                      updateFormData("kycRequired", !formData.kycRequired)
+                    }
                   >
-                    {formData.kycRequired ? 'Required' : 'Optional'}
+                    {formData.kycRequired ? "Required" : "Optional"}
                   </Button>
                 </div>
 
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Accredited Investors Only</Label>
-                    <p className="text-sm text-muted-foreground">Restrict to accredited investors (higher income/net worth)</p>
+                    <p className="text-sm text-muted-foreground">
+                      Restrict to accredited investors (higher income/net worth)
+                    </p>
                   </div>
                   <Button
                     variant={formData.accreditedOnly ? "default" : "outline"}
-                    onClick={() => updateFormData('accreditedOnly', !formData.accreditedOnly)}
+                    onClick={() =>
+                      updateFormData("accreditedOnly", !formData.accreditedOnly)
+                    }
                   >
-                    {formData.accreditedOnly ? 'Required' : 'Open to All'}
+                    {formData.accreditedOnly ? "Required" : "Open to All"}
                   </Button>
                 </div>
               </CardContent>
             </Card>
 
             <div>
-              <Label htmlFor="jurisdictionRestrictions">Jurisdiction Restrictions</Label>
+              <Label htmlFor="jurisdictionRestrictions">
+                Jurisdiction Restrictions
+              </Label>
               <Textarea
                 id="jurisdictionRestrictions"
                 placeholder="e.g., US residents only, excluding OFAC sanctioned countries..."
                 value={formData.jurisdictionRestrictions}
-                onChange={(e) => updateFormData('jurisdictionRestrictions', e.target.value)}
+                onChange={(e) =>
+                  updateFormData("jurisdictionRestrictions", e.target.value)
+                }
               />
               <p className="text-sm text-muted-foreground mt-1">
                 Specify any geographic restrictions for token holders
@@ -473,7 +622,8 @@ export default function TokenizePage() {
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Our legal team will review these settings to ensure regulatory compliance in relevant jurisdictions.
+                Our legal team will review these settings to ensure regulatory
+                compliance in relevant jurisdictions.
               </AlertDescription>
             </Alert>
           </div>
@@ -485,7 +635,8 @@ export default function TokenizePage() {
             <Alert>
               <Check className="h-4 w-4" />
               <AlertDescription>
-                Review all information carefully. Once deployed, some settings cannot be changed.
+                Review all information carefully. Once deployed, some settings
+                cannot be changed.
               </AlertDescription>
             </Alert>
 
@@ -501,7 +652,12 @@ export default function TokenizePage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Type:</span>
-                    <span className="font-medium">{ASSET_TYPES.find(t => t.id === formData.assetType)?.name}</span>
+                    <span className="font-medium">
+                      {
+                        ASSET_TYPES.find((t) => t.id === formData.assetType)
+                          ?.name
+                      }
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Location:</span>
@@ -509,7 +665,9 @@ export default function TokenizePage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Total Value:</span>
-                    <span className="font-medium">{formatCurrency(formData.totalValue)}</span>
+                    <span className="font-medium">
+                      {formatCurrency(formData.totalValue)}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -525,15 +683,25 @@ export default function TokenizePage() {
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Total Supply:</span>
-                    <span className="font-medium">{parseFloat(formData.totalSupply).toLocaleString()}</span>
+                    <span className="font-medium">
+                      {parseFloat(formData.totalSupply).toLocaleString()}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Price per Token:</span>
-                    <span className="font-medium">${calculateTokenomics()?.pricePerToken}</span>
+                    <span className="text-muted-foreground">
+                      Price per Token:
+                    </span>
+                    <span className="font-medium">
+                      ${calculateTokenomics()?.pricePerToken}
+                    </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Min Investment:</span>
-                    <span className="font-medium">{formatCurrency(formData.minInvestment)}</span>
+                    <span className="text-muted-foreground">
+                      Min Investment:
+                    </span>
+                    <span className="font-medium">
+                      {formatCurrency(formData.minInvestment)}
+                    </span>
                   </div>
                 </CardContent>
               </Card>
@@ -544,7 +712,8 @@ export default function TokenizePage() {
                 <h3 className="text-lg font-semibold mb-2">Deployment Cost</h3>
                 <div className="text-3xl font-bold mb-2">$2,500 USD</div>
                 <p className="text-sm opacity-90">
-                  Includes smart contract deployment, legal review, compliance setup, and ongoing platform fees for the first year.
+                  Includes smart contract deployment, legal review, compliance
+                  setup, and ongoing platform fees for the first year.
                 </p>
               </CardContent>
             </Card>
@@ -555,6 +724,51 @@ export default function TokenizePage() {
         return null;
     }
   };
+
+  function VehicleInformationForm() {
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="make">Make</Label>
+            <Input id="make" placeholder="e.g. Ford" />
+          </div>
+          <div>
+            <Label htmlFor="model">Model</Label>
+            <Input id="model" placeholder="e.g. Mustang GT" />
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="year">Year</Label>
+            <Input id="year" type="number" placeholder="e.g. 1967" />
+          </div>
+          <div>
+            <Label htmlFor="type">Vehicle Type</Label>
+            <Select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectGroup>
+                  <SelectItem value="classic_car">Classic Car</SelectItem>
+                  <SelectItem value="ev_project">EV Project</SelectItem>
+                  <SelectItem value="fleet">Fleet</SelectItem>
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        <div>
+          <Label htmlFor="description">Description</Label>
+          <Textarea
+            id="description"
+            placeholder="Describe your vehicle or project..."
+          />
+        </div>
+      </div>
+    );
+  }
 
   if (!isConnected) {
     return (
@@ -595,24 +809,37 @@ export default function TokenizePage() {
               <div className="flex items-center justify-between mb-6">
                 {TOKENIZATION_STEPS.map((step, index) => (
                   <div key={step.id} className="flex items-center">
-                    <div className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold ${
-                      currentStep >= step.id 
-                        ? 'bg-primary text-primary-foreground' 
-                        : 'bg-muted text-muted-foreground'
-                    }`}>
-                      {currentStep > step.id ? <Check className="h-4 w-4" /> : step.id}
+                    <div
+                      className={`flex items-center justify-center w-8 h-8 rounded-full text-sm font-semibold ${
+                        currentStep >= step.id
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {currentStep > step.id ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        step.id
+                      )}
                     </div>
                     {index < TOKENIZATION_STEPS.length - 1 && (
-                      <div className={`w-16 h-0.5 mx-2 ${
-                        currentStep > step.id ? 'bg-primary' : 'bg-muted'
-                      }`} />
+                      <div
+                        className={`w-16 h-0.5 mx-2 ${
+                          currentStep > step.id ? "bg-primary" : "bg-muted"
+                        }`}
+                      />
                     )}
                   </div>
                 ))}
               </div>
-              <Progress value={(currentStep / TOKENIZATION_STEPS.length) * 100} className="mb-2" />
+              <Progress
+                value={(currentStep / TOKENIZATION_STEPS.length) * 100}
+                className="mb-2"
+              />
               <div className="text-center">
-                <h3 className="font-semibold">{TOKENIZATION_STEPS[currentStep - 1].title}</h3>
+                <h3 className="font-semibold">
+                  {TOKENIZATION_STEPS[currentStep - 1].title}
+                </h3>
                 <p className="text-sm text-muted-foreground">
                   {TOKENIZATION_STEPS[currentStep - 1].description}
                 </p>
@@ -622,22 +849,20 @@ export default function TokenizePage() {
 
           {/* Step Content */}
           <Card>
-            <CardContent className="p-8">
-              {renderStepContent()}
-            </CardContent>
+            <CardContent className="p-8">{renderStepContent()}</CardContent>
           </Card>
 
           {/* Navigation */}
           <div className="flex justify-between">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={prevStep}
               disabled={currentStep === 1}
             >
               <ArrowLeft className="h-4 w-4 mr-2" />
               Previous
             </Button>
-            
+
             {currentStep < TOKENIZATION_STEPS.length ? (
               <Button onClick={nextStep}>
                 Next
@@ -654,4 +879,4 @@ export default function TokenizePage() {
       </main>
     </div>
   );
-} 
+}

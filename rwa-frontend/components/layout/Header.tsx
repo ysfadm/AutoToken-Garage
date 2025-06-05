@@ -1,41 +1,38 @@
-'use client';
+"use client";
 
-import { useEffect } from 'react';
-import Link from 'next/link';
-import { useWalletStore } from '@/stores/wallet';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Building2, 
-  Wallet, 
-  Network, 
-  Settings, 
+import { useEffect } from "react";
+import Link from "next/link";
+import { useWalletStore } from "@/stores/wallet";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  GraduationCap,
+  UserCircle,
+  Settings,
   LogOut,
-  ExternalLink,
-  Copy,
-  ChevronDown 
-} from 'lucide-react';
+  FileText,
+  ChevronDown,
+  BookOpen,
+  Trophy,
+  ScrollText,
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { truncateAddress, getExplorerUrl } from '@/lib/stellar';
-import { toast } from 'sonner';
+} from "@/components/ui/dropdown-menu";
+import { toast } from "sonner";
 
 export function Header() {
   const {
     isConnected,
     address,
-    balance,
-    network,
-    isLoading,
+    profile,
     connect,
     disconnect,
-    switchNetwork,
-    checkConnection
+    checkConnection,
   } = useWalletStore();
 
   // Check connection on mount
@@ -46,137 +43,55 @@ export function Header() {
   const handleConnect = async () => {
     try {
       await connect();
-      toast.success('Wallet connected successfully');
+      toast.success("Successfully connected");
     } catch (error) {
-      toast.error('Failed to connect wallet');
+      toast.error("Failed to connect");
     }
   };
 
   const handleDisconnect = () => {
     disconnect();
-    toast.info('Wallet disconnected');
+    toast.info("Disconnected");
   };
 
-  const handleNetworkSwitch = async (newNetwork: 'testnet' | 'mainnet') => {
-    if (newNetwork === network) return;
-    
-    try {
-      await switchNetwork(newNetwork);
-      toast.success(`Switched to ${newNetwork}`);
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : `Failed to switch to ${newNetwork}`;
-      
-      // Check if this is a manual switch required error
-      if (errorMessage.includes('Please switch to')) {
-        toast.error(errorMessage, {
-          duration: 6000, // Show longer for important instructions
-        });
-      } else {
-        toast.error(errorMessage);
-      }
-    }
-  };
-
-  const copyAddress = () => {
-    if (address) {
-      navigator.clipboard.writeText(address);
-      toast.success('Address copied to clipboard');
-    }
-  };
-
-  const openInExplorer = () => {
-    if (address) {
-      window.open(getExplorerUrl(address, 'account', network), '_blank');
-    }
+  const viewProfile = () => {
+    // Navigate to profile page
   };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between px-4">
-        {/* Logo and Navigation */}
-        <div className="flex items-center gap-8">
-          <Link href="/" className="flex items-center gap-3">
-            <Building2 className="h-8 w-8 text-primary" />
-            <div>
-              <h1 className="text-lg font-bold">RWA Investor</h1>
-              <p className="text-xs text-muted-foreground">Real World Assets</p>
-            </div>
+      <div className="container flex h-14 items-center">
+        <div className="mr-4 flex">
+          <Link href="/" className="flex items-center">
+            <GraduationCap className="h-6 w-6 mr-2" />
+            <span className="font-bold">PDR Platform</span>
           </Link>
-
-          {/* Navigation Links */}
-          <nav className="hidden md:flex items-center gap-6">
-            <Link 
-              href="/dashboard" 
-              className="text-sm font-medium transition-colors hover:text-primary"
-            >
-              Dashboard
+        </div>
+        <div className="flex flex-1 items-center space-x-2">
+          <nav className="flex items-center space-x-4">
+            <Link href="/activities" className="text-sm font-medium">
+              Activities
             </Link>
-            <Link 
-              href="/marketplace" 
-              className="text-sm font-medium transition-colors hover:text-primary"
-            >
-              Marketplace
+            <Link href="/competencies" className="text-sm font-medium">
+              Competencies
             </Link>
-            <Link 
-              href="/tokenize" 
-              className="text-sm font-medium transition-colors hover:text-primary"
-            >
-              Tokenize
-            </Link>
-            <Link 
-              href="/transfer" 
-              className="text-sm font-medium transition-colors hover:text-primary"
-            >
-              Transfer
+            <Link href="/reports" className="text-sm font-medium">
+              Reports
             </Link>
           </nav>
         </div>
 
-        {/* Wallet Section */}
+        {/* Profile Section */}
         <div className="flex items-center gap-3">
-          {/* Network Selector */}
-          {isConnected && (
+          {isConnected && profile ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Network className="h-4 w-4" />
-                  <Badge variant={network === 'testnet' ? 'secondary' : 'default'}>
-                    {network}
-                  </Badge>
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem 
-                  onClick={() => handleNetworkSwitch('testnet')}
-                  className={network === 'testnet' ? 'bg-muted' : ''}
-                >
-                  <Network className="h-4 w-4 mr-2" />
-                  Testnet
-                </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => handleNetworkSwitch('mainnet')}
-                  className={network === 'mainnet' ? 'bg-muted' : ''}
-                >
-                  <Network className="h-4 w-4 mr-2" />
-                  Mainnet
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-
-          {/* Wallet Connection */}
-          {isConnected ? (
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" className="gap-2 max-w-48">
-                  <Wallet className="h-4 w-4" />
+                <Button variant="outline" className="gap-2">
+                  <UserCircle className="h-4 w-4" />
                   <div className="text-left">
-                    <div className="font-mono text-sm">
-                      {truncateAddress(address || '')}
-                    </div>
+                    <div className="text-sm font-medium">{profile.name}</div>
                     <div className="text-xs text-muted-foreground">
-                      {parseFloat(balance).toFixed(2)} XLM
+                      {profile.role}
                     </div>
                   </div>
                   <ChevronDown className="h-3 w-3" />
@@ -184,39 +99,35 @@ export function Header() {
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5">
-                  <div className="text-sm font-medium">Connected Wallet</div>
-                  <div className="font-mono text-xs text-muted-foreground break-all">
-                    {address}
+                  <div className="text-sm font-medium">Profile</div>
+                  <div className="text-xs text-muted-foreground">
+                    {profile.department}
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={copyAddress}>
-                  <Copy className="h-4 w-4 mr-2" />
-                  Copy Address
+                <DropdownMenuItem onClick={viewProfile}>
+                  <UserCircle className="h-4 w-4 mr-2" />
+                  View Profile
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={openInExplorer}>
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  View in Explorer
+                <DropdownMenuItem onClick={() => {}}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleDisconnect} className="text-red-600">
+                <DropdownMenuItem onClick={handleDisconnect}>
                   <LogOut className="h-4 w-4 mr-2" />
-                  Disconnect
+                  Sign Out
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
-            <Button 
-              onClick={handleConnect} 
-              disabled={isLoading}
-              className="gap-2"
-            >
-              <Wallet className="h-4 w-4" />
-              {isLoading ? 'Connecting...' : 'Connect Wallet'}
+            <Button onClick={handleConnect} className="gap-2">
+              <UserCircle className="h-4 w-4" />
+              Sign In
             </Button>
           )}
         </div>
       </div>
     </header>
   );
-} 
+}

@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { AssetMetadata, ComplianceData, ContractInfo } from '@/lib/types';
-import { createContractClient, getContractInfo, getUserContractData } from '@/lib/contract';
-import { RWA_CONTRACT_ID } from '@/lib/stellar';
+import { create } from "zustand";
+import { AssetMetadata, ComplianceData, ContractInfo, PDRRecord, CompetencyArea } from "@/lib/types";
+import { createContractClient, getContractInfo, getUserContractData } from "@/lib/contract";
+import { RWA_CONTRACT_ID } from "@/lib/stellar";
 
 interface ContractStore {
   // Contract information
@@ -28,7 +28,67 @@ interface ContractStore {
   transfer: (from: string, to: string, amount: string) => Promise<boolean>;
   clearError: () => void;
   setContractId: (contractId: string) => void;
+
+  // PDR activities and competencies
+  activities: PDRRecord[];
+  competencies: CompetencyArea[];
+  // Data fetching
+  fetchActivities: (userId: string) => Promise<void>;
+  fetchCompetencies: (userId: string) => Promise<void>;
+  // Activity management
+  addActivity: (activity: PDRRecord) => Promise<void>;
+  updateActivity: (id: string, activity: Partial<PDRRecord>) => Promise<void>;
+  deleteActivity: (id: string) => Promise<void>;
+  // Competency management
+  updateCompetency: (id: string, competency: Partial<CompetencyArea>) => Promise<void>;
+  addEvidence: (competencyId: string, activity: PDRRecord) => Promise<void>;
 }
+
+// Mock data for development
+const MOCK_ACTIVITIES: PDRRecord[] = [
+  {
+    id: "act-1",
+    activity_type: "training",
+    title: "Advanced TypeScript Workshop",
+    description: "3-day intensive workshop on TypeScript and advanced patterns",
+    date_completed: "2025-05-15",
+    provider: "TypeScript Academy",
+    documentation: ["certificate.pdf"],
+    status: "verified",
+    competencies: ["typescript", "software_architecture"],
+    reflection: "Learned key concepts about generics and decorators"
+  },
+  {
+    id: "act-2",
+    activity_type: "certification",
+    title: "AWS Solutions Architect Associate",
+    description: "Cloud architecture certification from Amazon Web Services",
+    date_completed: "2025-04-20",
+    provider: "Amazon Web Services",
+    documentation: ["aws-cert.pdf"],
+    status: "verified",
+    competencies: ["cloud", "architecture"]
+  }
+];
+
+const MOCK_COMPETENCIES: CompetencyArea[] = [
+  {
+    id: "comp-1",
+    name: "TypeScript Development",
+    description: "Advanced TypeScript programming and best practices",
+    level: "intermediate",
+    status: "in_progress",
+    evidence: []
+  },
+  {
+    id: "comp-2",
+    name: "Cloud Architecture",
+    description: "Designing and implementing cloud solutions",
+    level: "beginner",
+    status: "in_progress",
+    evidence: []
+  }
+];
 
 export const useContractStore = create<ContractStore>((set, get) => ({
   // Initial state
@@ -43,6 +103,8 @@ export const useContractStore = create<ContractStore>((set, get) => ({
   isLoading: false,
   error: null,
   lastUpdated: null,
+  activities: [],
+  competencies: [],
 
   // Clear error state
   clearError: () => set({ error: null }),
@@ -165,5 +227,103 @@ export const useContractStore = create<ContractStore>((set, get) => ({
       
       return false;
     }
+  },
+
+  fetchActivities: async (userId: string) => {
+    set({ isLoading: true });
+    try {
+      // In a real app, fetch from API
+      set({ activities: MOCK_ACTIVITIES });
+    } catch (error) {
+      set({ error: "Failed to fetch activities" });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  fetchCompetencies: async (userId: string) => {
+    set({ isLoading: true });
+    try {
+      // In a real app, fetch from API
+      set({ competencies: MOCK_COMPETENCIES });
+    } catch (error) {
+      set({ error: "Failed to fetch competencies" });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  addActivity: async (activity: PDRRecord) => {
+    set({ isLoading: true });
+    try {
+      // In a real app, send to API
+      const activities = get().activities;
+      set({ activities: [...activities, activity] });
+    } catch (error) {
+      set({ error: "Failed to add activity" });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  updateActivity: async (id: string, updates: Partial<PDRRecord>) => {
+    set({ isLoading: true });
+    try {
+      const activities = get().activities.map(act => 
+        act.id === id ? { ...act, ...updates } : act
+      );
+      set({ activities });
+    } catch (error) {
+      set({ error: "Failed to update activity" });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  deleteActivity: async (id: string) => {
+    set({ isLoading: true });
+    try {
+      const activities = get().activities.filter(act => act.id !== id);
+      set({ activities });
+    } catch (error) {
+      set({ error: "Failed to delete activity" });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  updateCompetency: async (id: string, updates: Partial<CompetencyArea>) => {
+    set({ isLoading: true });
+    try {
+      const competencies = get().competencies.map(comp => 
+        comp.id === id ? { ...comp, ...updates } : comp
+      );
+      set({ competencies });
+    } catch (error) {
+      set({ error: "Failed to update competency" });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  addEvidence: async (competencyId: string, activity: PDRRecord) => {
+    set({ isLoading: true });
+    try {
+      const competencies = get().competencies.map(comp => 
+        comp.id === competencyId 
+          ? { ...comp, evidence: [...comp.evidence, activity] }
+          : comp
+      );
+      set({ competencies });
+    } catch (error) {
+      set({ error: "Failed to add evidence" });
+      throw error;
+    } finally {
+      set({ isLoading: false });
+    }
   }
-})); 
+}));
